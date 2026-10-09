@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: ..
+    restart: unless-stopped
+    environment:
+      APP_ORIGIN: https://${DOMAIN:?请在部署环境中设置 DOMAIN}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:owner@example.com}
+    volumes:
+      - line-data:/app/data
+    expose:
+      - "8787"
+    init: true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/api/auth/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+  backup:
+    build:
+      context: ..
+    restart: unless-stopped
+    volumes:
+      - line-data:/app/data
+    command: ["sh", "-c", "while true; do node dist/server/server/src/backup.js; sleep 86400; done"]
+    depends_on:
+      app:
+        condition: service_healthy
+volumes:
+  line-data:
+  caddy-data:
+  caddy-config:

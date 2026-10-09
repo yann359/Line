@@ -1,0 +1,2 @@
+import { defineConfig } from '@playwright/test';
+export default defineConfig({ testDir: './tests/browser', workers: 1, use: { baseURL: 'http://127.0.0.1:5183', browserName: 'chromium', launchOptions: { channel: 'msedge' } }, webServer: { command: 'node dist/server/server/src/index.js', url: 'http://127.0.0.1:5183/api/auth/status', env: { PORT: '5183', HOST: '127.0.0.1', APP_ORIGIN: 'http://127.0.0.1:5183', DATA_DIR: `./test-results/e2e-data-${Date.now()}`, NODE_ENV: 'development', ENABLE_CHATGPT_PLAN: 'true' }, reuseExistingServer: false }, reporter: 'list' });
